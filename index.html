@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Интерактивная 3D Планета</title>
+<style>
+body {
+margin: 0;
+overflow: hidden;
+}
+canvas {
+display: block;
+}
+</style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Инициализация сцены
+var scene = new THREE.Scene();
+
+// Инициализация камеры
+var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 5;
+
+// Инициализация рендерера
+var renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Создание геометрии планеты (сфера)
+var geometry = new THREE.SphereGeometry(3, 64, 64);
+
+// Загрузка текстуры планеты
+var textureLoader = new THREE.TextureLoader();
+var texture = textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', function(texture) {
+texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+});
+
+// Инициализация материала с текстурой
+var material = new THREE.MeshBasicMaterial({ map: texture });
+
+// Создание меша с геометрией и материалом
+var planet = new THREE.Mesh(geometry, material);
+scene.add(planet);
+
+// Инициализация переменных для управления мышью
+var isDragging = false;
+var previousMousePosition = {
+x: 0,
+y: 0
+};
+
+// Добавление обработчиков событий мыши
+document.addEventListener('mousedown', function(event) {
+isDragging = true;
+});
+
+document.addEventListener('mousemove', function(event) {
+var deltaMove = {
+x: event.offsetX - previousMousePosition.x,
+y: event.offsetY - previousMousePosition.y
+};
+
+if (isDragging) {
+var deltaRotationQuaternion = new THREE.Quaternion()
+.setFromEuler(new THREE.Euler(
+toRadians(deltaMove.y * 1),
+toRadians(deltaMove.x * 1),
+0,
+'XYZ'
+));
+
+planet.quaternion.multiplyQuaternions(deltaRotationQuaternion, planet.quaternion);
+}
+
+previousMousePosition = {
+x: event.offsetX,
+y: event.offsetY
+};
+});
+
+document.addEventListener('mouseup', function(event) {
+isDragging = false;
+});
+
+// Преобразование градусов в радианы
+function toRadians(degrees) {
+return degrees * (Math.PI / 180);
+}
+
+// Функция анимации
+function animate() {
+requestAnimationFrame(animate);
+renderer.render(scene, camera);
+}
+
+// Вызов функции анимации
+animate();
+</script>
+</body>
+</html>
